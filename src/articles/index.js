@@ -3,10 +3,11 @@ const mongoose = require("mongoose");
 const ArticleSchema = require("./schema");
 const ReviewSchema = require("../reviews/schema");
 const AuthorSchema = require("../authors/schema");
+const { authorize } = require("../authTools");
 
 const articleRouter = express.Router();
 
-articleRouter.post("/", async (req, res) => {
+articleRouter.post("/", authorize, async (req, res) => {
   try {
     console.log(req.body);
     const newArticle = new ArticleSchema(req.body);
@@ -18,17 +19,24 @@ articleRouter.post("/", async (req, res) => {
   }
 });
 
-articleRouter.post("/:id/add-to-author/:authorID", async (req, res) => {
-  try {
-    await AuthorSchema.addArticleIdToAuthor(req.params.id, req.params.authorID);
-    res.send("added");
-  } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
+articleRouter.post(
+  "/:id/add-to-author/:authorID",
+  authorize,
+  async (req, res) => {
+    try {
+      await AuthorSchema.addArticleIdToAuthor(
+        req.params.id,
+        req.params.authorID
+      );
+      res.send("added");
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error);
+    }
   }
-});
+);
 
-articleRouter.get("/", async (req, res) => {
+articleRouter.get("/", authorize, async (req, res) => {
   try {
     const allArticles = await ArticleSchema.find().populate("author");
     res.send(allArticles);
@@ -38,7 +46,7 @@ articleRouter.get("/", async (req, res) => {
   }
 });
 
-articleRouter.get("/:id", async (req, res) => {
+articleRouter.get("/:id", authorize, async (req, res) => {
   try {
     const article = await ArticleSchema.findById(req.params.id).populate(
       "author"
@@ -50,7 +58,7 @@ articleRouter.get("/:id", async (req, res) => {
   }
 });
 
-articleRouter.put("/:id", async (req, res) => {
+articleRouter.put("/:id", authorize, async (req, res) => {
   try {
     const article = await ArticleSchema.findByIdAndUpdate(
       req.params.id,
@@ -68,7 +76,7 @@ articleRouter.put("/:id", async (req, res) => {
   }
 });
 
-articleRouter.delete("/:id", async (req, res) => {
+articleRouter.delete("/:id", authorize, async (req, res) => {
   try {
     const article = await ArticleSchema.findByIdAndDelete(req.params.id);
     if (article) {
@@ -82,7 +90,7 @@ articleRouter.delete("/:id", async (req, res) => {
   }
 });
 
-articleRouter.post("/:id", async (req, res) => {
+articleRouter.post("/:id", authorize, async (req, res) => {
   try {
     const newReview = new ReviewSchema(req.body);
     const review = await newReview.save();
@@ -101,7 +109,7 @@ articleRouter.post("/:id", async (req, res) => {
   }
 });
 
-articleRouter.get("/:id/reviews", async (req, res) => {
+articleRouter.get("/:id/reviews", authorize, async (req, res) => {
   try {
     const reviews = await ArticleSchema.findById(req.params.id, { reviews: 1 });
     res.status(200).send(reviews.reviews);
@@ -110,7 +118,7 @@ articleRouter.get("/:id/reviews", async (req, res) => {
   }
 });
 
-articleRouter.get("/:id/reviews/:reviewID", async (req, res) => {
+articleRouter.get("/:id/reviews/:reviewID", authorize, async (req, res) => {
   try {
     const selectedReview = await ArticleSchema.findOne(
       { _id: mongoose.Types.ObjectId(req.params.id) },
@@ -132,7 +140,7 @@ articleRouter.get("/:id/reviews/:reviewID", async (req, res) => {
   }
 });
 
-articleRouter.put("/:id/reviews/:reviewID", async (req, res) => {
+articleRouter.put("/:id/reviews/:reviewID", authorize, async (req, res) => {
   try {
     const selectedReview = await ArticleSchema.findOne(
       { _id: mongoose.Types.ObjectId(req.params.id) },
@@ -168,7 +176,7 @@ articleRouter.put("/:id/reviews/:reviewID", async (req, res) => {
   }
 });
 
-articleRouter.delete("/:id/reviews/:reviewID", async (req, res) => {
+articleRouter.delete("/:id/reviews/:reviewID", authorize, async (req, res) => {
   try {
     const alteredReview = await ArticleSchema.findByIdAndUpdate(
       req.params.id,

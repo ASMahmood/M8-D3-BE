@@ -36,6 +36,16 @@ AuthorSchema.pre("save", async function (next) {
   next();
 });
 
+AuthorSchema.statics.findByCrendor = async function (email, password) {
+  const author = await this.findOne({ email });
+
+  if (author) {
+    const matching = await bcrypt.compare(password, author.password);
+    if (matching) return author;
+    else return null;
+  } else return null;
+};
+
 const AuthorModel = model("Author", AuthorSchema);
 
 module.exports = AuthorModel;

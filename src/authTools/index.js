@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const AuthorModel = require("../authors/schema");
 
 const generateAccessToken = (payload) =>
   new Promise((res, rej) =>
@@ -39,4 +40,30 @@ const authenticate = async (author) => {
   }
 };
 
-module.exports = { authenticate };
+const verifyAccess = (token) =>
+  new Promise((res, rej) =>
+    jwt.verify(token, process.env.ACCESS_SECRET, (err, decodedToken) => {
+      if (err) rej(err);
+      res(decodedToken);
+    })
+  );
+
+const authorize = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = await verifyAccess(token);
+    const author = await AuthorModel.findOne({ _id: decodedToken._id });
+    if (!author) {
+      throw new Error();
+    }
+    req.token = token;
+    req.author = author;
+    next();
+  } catch (error) {
+    const err = new Error("NO AUTHENTICATION FOUND");
+    err.httpStatusCode = 401;
+    next(err);
+  }
+};
+
+module.exports = { authenticate, authorize };

@@ -1,9 +1,11 @@
 const express = require("express");
+const AuthorModel = require("./schema");
 const AuthorSchema = require("./schema");
+const { authenticate, authorize } = require("../authTools");
 
 const authorRouter = express.Router();
 
-authorRouter.get("/", async (req, res) => {
+authorRouter.get("/", authorize, async (req, res, next) => {
   try {
     if (req.query.name) {
       const author = await AuthorSchema.findOne({ name: req.query.name });
@@ -22,7 +24,7 @@ authorRouter.get("/", async (req, res) => {
   }
 });
 
-authorRouter.post("/registser", async (req, res) => {
+authorRouter.post("/register", async (req, res) => {
   try {
     const newAuthor = new AuthorSchema(req.body);
     const { _id } = await newAuthor.save();
@@ -33,7 +35,19 @@ authorRouter.post("/registser", async (req, res) => {
   }
 });
 
-authorRouter.get("/:id", async (req, res) => {
+authorRouter.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const author = await AuthorModel.findByCrendor(email, password);
+    const tokens = await authenticate(author);
+    res.send(tokens);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
+authorRouter.get("/:id", authorize, async (req, res) => {
   try {
     const selectedAuthor = await AuthorSchema.findById(req.params.id).populate(
       "articles"
@@ -49,7 +63,7 @@ authorRouter.get("/:id", async (req, res) => {
   }
 });
 
-authorRouter.delete("/:id", async (req, res) => {
+authorRouter.delete("/:id", authorize, async (req, res) => {
   try {
     const author = await AuthorSchema.findByIdAndDelete(req.params.id);
     if (author) {
@@ -63,7 +77,7 @@ authorRouter.delete("/:id", async (req, res) => {
   }
 });
 
-authorRouter.put("/:id", async (req, res) => {
+authorRouter.put("/:id", authorize, async (req, res) => {
   try {
     const author = await AuthorSchema.findByIdAndUpdate(
       req.params.id,
