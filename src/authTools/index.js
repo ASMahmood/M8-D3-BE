@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const User = require("../users/schema");
 
 const generateAccessToken = (payload) =>
   new Promise((res, rej) =>
@@ -27,10 +26,13 @@ const generateRefreshToken = (payload) =>
     )
   );
 
-const authenticate = async (user) => {
+const authenticate = async (author) => {
   try {
-    const newAccess = await generateAccessToken({ _id: user._id });
-    const newRefresh = await generateRefreshToken({ _id: user._id });
+    const newAccess = await generateAccessToken({ _id: author._id });
+    const newRefresh = await generateRefreshToken({ _id: author._id });
+    author.tokenArray.push({ token: newRefresh });
+    await author.save();
+    return { access: newAccess, refresh: newRefresh };
   } catch (error) {
     console.log(error);
     throw new Error(error);

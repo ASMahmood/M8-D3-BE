@@ -6,10 +6,7 @@ const ReviewsSchema = new Schema(
       type: String,
       required: true,
     },
-    user: {
-      type: String,
-      required: true,
-    },
+    author: { type: Schema.Types.ObjectId, ref: "Author" },
   },
   { timestamps: true }
 );
