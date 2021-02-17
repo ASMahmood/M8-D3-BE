@@ -94,4 +94,24 @@ authorRouter.put("/:id", authorize, async (req, res) => {
     res.status(500).send(error);
   }
 });
+
+authorRouter.post("/refreshToken", async (req, res, next) => {
+  const oldRefresh = req.body.refreshToken;
+  if (!oldRefresh) {
+    const err = new Error("MISSING REFRESH TOKEN");
+    err.httpStatusCode = 400;
+    next(err);
+  } else {
+    try {
+      const newTokens = await refreshToken(oldRefresh);
+      res.send(newTokens);
+    } catch (error) {
+      console.log(error);
+      const err = new Error(error);
+      err.httpStatusCode = 403;
+      next(err);
+    }
+  }
+});
+
 module.exports = authorRouter;
