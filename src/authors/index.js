@@ -22,7 +22,7 @@ authorRouter.get("/", async (req, res) => {
   }
 });
 
-authorRouter.post("/", async (req, res) => {
+authorRouter.post("/registser", async (req, res) => {
   try {
     const newAuthor = new AuthorSchema(req.body);
     const { _id } = await newAuthor.save();
